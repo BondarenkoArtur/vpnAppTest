@@ -5,17 +5,27 @@ import android.os.Parcelable;
 
 public class APIVpnProfile implements Parcelable {
 
-    public final String mUUID;
-    public final String mName;
+    public static final Creator<APIVpnProfile> CREATOR = new Creator<APIVpnProfile>() {
+        public APIVpnProfile createFromParcel(final Parcel in) {
+            return new APIVpnProfile(in);
+        }
+
+        public APIVpnProfile[] newArray(final int size) {
+            return new APIVpnProfile[size];
+        }
+    };
+
+    private final String mUUID;
+    private final String mName;
     private final boolean mUserEditable;
 
-    public APIVpnProfile(Parcel in) {
+    public APIVpnProfile(final Parcel in) {
         mUUID = in.readString();
         mName = in.readString();
         mUserEditable = in.readInt() != 0;
     }
 
-    public APIVpnProfile(String uuidString, String name, boolean userEditable, String profileCreator) {
+    public APIVpnProfile(final String uuidString, final String name, final boolean userEditable) {
         mUUID = uuidString;
         mName = name;
         mUserEditable = userEditable;
@@ -27,25 +37,13 @@ public class APIVpnProfile implements Parcelable {
     }
 
     @Override
-    public void writeToParcel(Parcel dest, int flags) {
+    public void writeToParcel(final Parcel dest, final int flags) {
         dest.writeString(mUUID);
         dest.writeString(mName);
-        if (mUserEditable)
+        if (mUserEditable) {
             dest.writeInt(0);
-        else
+        } else {
             dest.writeInt(1);
+        }
     }
-
-    public static final Creator<APIVpnProfile> CREATOR
-        = new Creator<APIVpnProfile>() {
-        public APIVpnProfile createFromParcel(Parcel in) {
-            return new APIVpnProfile(in);
-        }
-
-        public APIVpnProfile[] newArray(int size) {
-            return new APIVpnProfile[size];
-        }
-    };
-
-
 }
