@@ -75,6 +75,11 @@ public class InternetTester {
     private static final int BIG_BUFFER_SIZE = 1024;
     private static final String DOMAIN_TO_SEEK = "google.com";
     private static final int INVERT_BYTE = 0b11111111;
+    private static final int IP_ADDRESS_SIZE = 4;
+    private static final int IP_ADDRESS_FIRST = 0;
+    private static final int IP_ADDRESS_SECOND = 1;
+    private static final int IP_ADDRESS_THIRD = 2;
+    private static final int IP_ADDRESS_FOURTH = 3;
 
     private final Context context;
     private final TesterListener testerListener;
@@ -219,8 +224,11 @@ public class InternetTester {
         for (int addrPart = 0; addrPart < addrLen; addrPart++) {
             array[addrPart] = din.readByte() & INVERT_BYTE;
         }
-        System.out.println(String.format(Locale.getDefault(),
-            "Address: %d.%d.%d.%d", array[0], array[1], array[2], array[3]));
+        if (array.length >= IP_ADDRESS_SIZE) {
+            System.out.println(String.format(Locale.getDefault(),
+                "Address: %d.%d.%d.%d", array[IP_ADDRESS_FIRST], array[IP_ADDRESS_SECOND],
+                array[IP_ADDRESS_THIRD], array[IP_ADDRESS_FOURTH]));
+        }
     }
 
     private boolean testHttpsPort(final String address) {
