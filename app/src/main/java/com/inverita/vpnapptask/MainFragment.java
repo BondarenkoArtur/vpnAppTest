@@ -36,7 +36,6 @@ import de.blinkt.openvpn.api.IOpenVPNStatusCallback;
 public class MainFragment extends Fragment implements View.OnClickListener, Handler.Callback {
 
     private static final int MSG_UPDATE_STATE = 0;
-    private static final int MSG_UPDATE_MY_IP = 1;
     private static final int START_PROFILE_EMBEDDED = 2;
     private static final int ICS_OPENVPN_PERMISSION = 7;
     private PopupHelper mPopupHelper;
@@ -184,7 +183,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
                 onGetMyIPClicked();
                 break;
             case R.id.check_internet_connection:
-                onPingClicked();
+                onCheckInternetConnectionClicked();
                 break;
             default:
                 break;
@@ -234,7 +233,11 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
         }.start();
     }
 
-    private void onPingClicked() {
+    private void onCheckInternetConnectionClicked() {
+        checkInternetConnection();
+    }
+
+    private void checkInternetConnection() {
         new Thread() {
             @Override
             public void run() {
@@ -295,8 +298,9 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
 
     @Override
     public boolean handleMessage(final Message msg) {
-        if (msg.what == MSG_UPDATE_STATE || msg.what == MSG_UPDATE_MY_IP) {
+        if (msg.what == MSG_UPDATE_STATE) {
             mStatus.setText((CharSequence) msg.obj);
+            checkInternetConnection();
         }
         return true;
     }
