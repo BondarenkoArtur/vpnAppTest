@@ -10,5 +10,13 @@
     <string name="openvpn_needed_text">External OpenVPN client is needed</string>
     <string name="download">Download</string>
     <string name="cancel">Cancel</string>
+    <string name="port_test_address">Port Test Address:</string>
+    <string name="no_address">no address</string>
+    <string name="dns">DNS:</string>
+    <string name="https">HTTPS:</string>
+    <string name="current_ip">Current IP:</string>
+    <string name="check_internet_connection">Check Internet connection</string>
+    <string name="dns_tester_indicator">DNS Tester Indicator</string>
+    <string name="https_tester_indicator">HTTPS Tester Indicator</string>
 
 </resources>

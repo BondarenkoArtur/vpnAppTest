@@ -3,8 +3,14 @@ package de.blinkt.openvpn.api;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+/**
+ * APIVpnProfile used in OpenVPN app that connect by AIDL in our app.
+ */
 public class APIVpnProfile implements Parcelable {
 
+    /**
+     * Main Profile Creator.
+     */
     public static final Creator<APIVpnProfile> CREATOR = new Creator<APIVpnProfile>() {
         public APIVpnProfile createFromParcel(final Parcel in) {
             return new APIVpnProfile(in);

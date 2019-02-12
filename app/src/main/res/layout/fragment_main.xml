@@ -6,16 +6,24 @@
     tools:context="com.inverita.vpnapptask.MainFragment">
 
     <Button
+        android:id="@+id/check_internet_connection"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/check_internet_connection" />
+
+    <Button
         android:id="@+id/start"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/check_internet_connection"
         android:text="@string/start_vpn"
-        android:visibility="visible" />
+        android:enabled="false"/>
 
     <Button
         android:id="@+id/disconnect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_below="@id/check_internet_connection"
         android:layout_toEndOf="@id/start"
         android:text="@string/disconnect_vpn" />
 
@@ -27,12 +35,92 @@
         android:layout_alignParentStart="true"
         android:text="@string/get_ip" />
 
+    <LinearLayout
+        android:id="@+id/internet_tester_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/getMyIP"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:text="@string/port_test_address" />
+
+            <TextView
+                android:id="@+id/internet_tester_address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/no_address" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/dns" />
+
+            <ImageView
+                android:id="@+id/internet_tester_dns"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="@string/dns_tester_indicator"
+                android:src="@android:drawable/presence_away" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/https" />
+
+            <ImageView
+                android:id="@+id/internet_tester_https"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:contentDescription="@string/https_tester_indicator"
+                android:src="@android:drawable/presence_away" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
     <TextView
         android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/getMyIP"
+        android:layout_below="@id/internet_tester_container"
         android:padding="16dp"
         android:text="@string/no_status_yet" />
+
+    <LinearLayout
+        android:id="@+id/current_ip_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/status"
+        android:padding="16dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="16dp"
+            android:text="@string/current_ip" />
+
+        <TextView
+            android:id="@+id/current_ip_address"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no_address" />
+    </LinearLayout>
 
 </RelativeLayout>

@@ -14,10 +14,13 @@ import android.os.RemoteException;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.inverita.vpnapptask.utils.InternetUtils;
+import com.inverita.vpnapptask.utils.InternetTester;
 import com.inverita.vpnapptask.utils.PopupHelper;
+import com.inverita.vpnapptask.utils.TesterListener;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,12 +39,19 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
     private static final int MSG_UPDATE_MY_IP = 1;
     private static final int START_PROFILE_EMBEDDED = 2;
     private static final int ICS_OPENVPN_PERMISSION = 7;
-    private final PopupHelper popupHelper = new PopupHelper(getActivity());
-    private final InternetUtils internetUtils = new InternetUtils();
+    private PopupHelper mPopupHelper;
+    private InternetTester mInternetTester;
 
     private IOpenVPNAPIService mService;
     private Handler mHandler;
     private TextView mStatus;
+    private Button mStart;
+    private View mTesterContainer;
+    private TextView mAddress;
+    private ImageView mDNSIndicator;
+    private ImageView mHttpsIndicator;
+    private View mCurrentIPContainer;
+    private TextView mCurrentIPAddress;
 
     private IOpenVPNStatusCallback mCallback = new IOpenVPNStatusCallback.Stub() {
         /**
@@ -100,9 +110,31 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
         final View view = inflater.inflate(R.layout.fragment_main, container, false);
         view.findViewById(R.id.disconnect).setOnClickListener(this);
         view.findViewById(R.id.getMyIP).setOnClickListener(this);
-        view.findViewById(R.id.start).setOnClickListener(this);
+        view.findViewById(R.id.check_internet_connection).setOnClickListener(this);
+        mStart = view.findViewById(R.id.start);
+        mStart.setOnClickListener(this);
         mStatus = view.findViewById(R.id.status);
+        mTesterContainer = view.findViewById(R.id.internet_tester_container);
+        mAddress = view.findViewById(R.id.internet_tester_address);
+        mDNSIndicator = view.findViewById(R.id.internet_tester_dns);
+        mHttpsIndicator = view.findViewById(R.id.internet_tester_https);
+        mCurrentIPContainer = view.findViewById(R.id.current_ip_container);
+        mCurrentIPAddress = view.findViewById(R.id.current_ip_address);
         return view;
+    }
+
+    @Override
+    public void onAttach(final Activity activity) {
+        mPopupHelper = new PopupHelper(activity);
+        mInternetTester = new InternetTester(activity, new MainTesterListener(activity));
+        super.onAttach(activity);
+    }
+
+    @Override
+    public void onDetach() {
+        mPopupHelper = null;
+        mInternetTester = null;
+        super.onDetach();
     }
 
     private void startVPNConnection() {
@@ -143,43 +175,84 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
     public void onClick(final View view) {
         switch (view.getId()) {
             case R.id.start:
-                try {
-                    prepareStartProfile();
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
-                    popupHelper.openMarketPopup();
-                }
+                onStartClicked();
                 break;
             case R.id.disconnect:
-                try {
-                    mService.disconnect();
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                } catch (NullPointerException e) {
-                    e.printStackTrace();
-                    popupHelper.openMarketPopup();
-                }
+                onDisconnectClicked();
                 break;
             case R.id.getMyIP:
-                new Thread() {
-                    @Override
-                    public void run() {
-                        try {
-                            final String myip = internetUtils.getMyOwnIP();
-                            final Message msg = Message.obtain(mHandler, MSG_UPDATE_MY_IP, myip);
-                            msg.sendToTarget();
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }.start();
+                onGetMyIPClicked();
+                break;
+            case R.id.check_internet_connection:
+                onPingClicked();
                 break;
             default:
                 break;
         }
 
+    }
+
+    private void onStartClicked() {
+        try {
+            prepareStartProfile();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            if (mPopupHelper != null) {
+                mPopupHelper.openMarketPopup();
+            }
+        }
+    }
+
+    private void onDisconnectClicked() {
+        try {
+            mService.disconnect();
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            if (mPopupHelper != null) {
+                mPopupHelper.openMarketPopup();
+            }
+        }
+    }
+
+    private void onGetMyIPClicked() {
+        mCurrentIPAddress.setText(R.string.no_address);
+        new Thread() {
+            @Override
+            public void run() {
+                try {
+                    if (mInternetTester != null) {
+                        mInternetTester.getMyOwnIP();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+
+    private void onPingClicked() {
+        new Thread() {
+            @Override
+            public void run() {
+                if (mInternetTester != null) {
+                    final boolean result = mInternetTester.mainTest();
+                    setVPNButtonsEnabled(result);
+                }
+            }
+        }.start();
+    }
+
+    private void setVPNButtonsEnabled(final boolean result) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mStart.setEnabled(result);
+            }
+        });
     }
 
     private void prepareStartProfile() throws RemoteException {
@@ -226,5 +299,74 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
             mStatus.setText((CharSequence) msg.obj);
         }
         return true;
+    }
+
+    /**
+     * Custom Tester Listener that needed to handle all events from Internet Tester.
+     */
+    private class MainTesterListener implements TesterListener {
+        private final Activity activity;
+
+        MainTesterListener(final Activity activity) {
+            this.activity = activity;
+        }
+
+        @Override
+        public void onTestStarted() {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mTesterContainer.setVisibility(View.VISIBLE);
+                }
+            });
+        }
+
+        @Override
+        public void onAddressChanged(final String address) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mAddress.setText(address);
+                    mDNSIndicator.setImageResource(android.R.drawable.presence_away);
+                    mHttpsIndicator.setImageResource(android.R.drawable.presence_away);
+                }
+            });
+        }
+
+        @Override
+        public void onDNSResultReceived(final boolean dnsResult) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mDNSIndicator.setImageResource(dnsResult
+                        ? android.R.drawable.presence_online
+                        : android.R.drawable.presence_busy);
+                }
+            });
+        }
+
+        @Override
+        public void onHttpsResultReceived(final boolean httpsResult) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mHttpsIndicator.setImageResource(httpsResult
+                        ? android.R.drawable.presence_online
+                        : android.R.drawable.presence_busy);
+                }
+            });
+
+        }
+
+        @Override
+        public void onExternalIPReceived(final String address) {
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    mCurrentIPContainer.setVisibility(View.VISIBLE);
+                    mCurrentIPAddress.setText(address);
+                }
+            });
+        }
     }
 }
