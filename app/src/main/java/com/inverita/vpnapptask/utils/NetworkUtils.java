@@ -27,7 +27,7 @@ import java.util.Locale;
 /**
  * This class is needed to mainTest is current internet connection are working or not.
  */
-public class InternetTester {
+public class NetworkUtils {
 
     private static final int DNS_PORT = 53;
     private static final int HTTPS_PORT = 443;
@@ -84,7 +84,7 @@ public class InternetTester {
     private final Context context;
     private final TesterListener testerListener;
 
-    public InternetTester(final Context context, final TesterListener testerListener) {
+    public NetworkUtils(final Context context, final TesterListener testerListener) {
         this.testerListener = testerListener;
         this.context = context;
     }

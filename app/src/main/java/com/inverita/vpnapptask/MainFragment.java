@@ -18,7 +18,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.inverita.vpnapptask.utils.InternetTester;
+import com.inverita.vpnapptask.utils.NetworkUtils;
 import com.inverita.vpnapptask.utils.PopupHelper;
 import com.inverita.vpnapptask.utils.TesterListener;
 
@@ -39,7 +39,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
     private static final int START_PROFILE_EMBEDDED = 2;
     private static final int ICS_OPENVPN_PERMISSION = 7;
     private PopupHelper mPopupHelper;
-    private InternetTester mInternetTester;
+    private NetworkUtils mNetworkUtils;
 
     private IOpenVPNAPIService mService;
     private Handler mHandler;
@@ -125,14 +125,14 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
     @Override
     public void onAttach(final Activity activity) {
         mPopupHelper = new PopupHelper(activity);
-        mInternetTester = new InternetTester(activity, new MainTesterListener(activity));
+        mNetworkUtils = new NetworkUtils(activity, new MainTesterListener());
         super.onAttach(activity);
     }
 
     @Override
     public void onDetach() {
         mPopupHelper = null;
-        mInternetTester = null;
+        mNetworkUtils = null;
         super.onDetach();
     }
 
@@ -219,18 +219,18 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
 
     private void onGetMyIPClicked() {
         mCurrentIPAddress.setText(R.string.no_address);
-        new Thread() {
+        MainApplication.getInstance().getAppExecutors().networkIO().execute(new Runnable() {
             @Override
             public void run() {
                 try {
-                    if (mInternetTester != null) {
-                        mInternetTester.getMyOwnIP();
+                    if (mNetworkUtils != null) {
+                        mNetworkUtils.getMyOwnIP();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
-        }.start();
+        });
     }
 
     private void onCheckInternetConnectionClicked() {
@@ -238,19 +238,19 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
     }
 
     private void checkInternetConnection() {
-        new Thread() {
+        MainApplication.getInstance().getAppExecutors().networkIO().execute(new Runnable() {
             @Override
             public void run() {
-                if (mInternetTester != null) {
-                    final boolean result = mInternetTester.mainTest();
+                if (mNetworkUtils != null) {
+                    final boolean result = mNetworkUtils.mainTest();
                     setVPNButtonsEnabled(result);
                 }
             }
-        }.start();
+        });
     }
 
     private void setVPNButtonsEnabled(final boolean result) {
-        getActivity().runOnUiThread(new Runnable() {
+        MainApplication.getInstance().getAppExecutors().mainThread().execute(new Runnable() {
             @Override
             public void run() {
                 mStart.setEnabled(result);
@@ -309,15 +309,10 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
      * Custom Tester Listener that needed to handle all events from Internet Tester.
      */
     private class MainTesterListener implements TesterListener {
-        private final Activity activity;
-
-        MainTesterListener(final Activity activity) {
-            this.activity = activity;
-        }
 
         @Override
         public void onTestStarted() {
-            activity.runOnUiThread(new Runnable() {
+            MainApplication.getInstance().getAppExecutors().mainThread().execute(new Runnable() {
                 @Override
                 public void run() {
                     mTesterContainer.setVisibility(View.VISIBLE);
@@ -327,7 +322,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
 
         @Override
         public void onAddressChanged(final String address) {
-            activity.runOnUiThread(new Runnable() {
+            MainApplication.getInstance().getAppExecutors().mainThread().execute(new Runnable() {
                 @Override
                 public void run() {
                     mAddress.setText(address);
@@ -339,7 +334,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
 
         @Override
         public void onDNSResultReceived(final boolean dnsResult) {
-            activity.runOnUiThread(new Runnable() {
+            MainApplication.getInstance().getAppExecutors().mainThread().execute(new Runnable() {
                 @Override
                 public void run() {
                     mDNSIndicator.setImageResource(dnsResult
@@ -351,7 +346,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
 
         @Override
         public void onHttpsResultReceived(final boolean httpsResult) {
-            activity.runOnUiThread(new Runnable() {
+            MainApplication.getInstance().getAppExecutors().mainThread().execute(new Runnable() {
                 @Override
                 public void run() {
                     mHttpsIndicator.setImageResource(httpsResult
@@ -364,7 +359,7 @@ public class MainFragment extends Fragment implements View.OnClickListener, Hand
 
         @Override
         public void onExternalIPReceived(final String address) {
-            activity.runOnUiThread(new Runnable() {
+            MainApplication.getInstance().getAppExecutors().mainThread().execute(new Runnable() {
                 @Override
                 public void run() {
                     mCurrentIPContainer.setVisibility(View.VISIBLE);

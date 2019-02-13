@@ -1,7 +1,7 @@
 package com.inverita.vpnapptask.utils;
 
 /**
- * This Listener is needed to handle all events from InternetTester.
+ * This Listener is needed to handle all events from NetworkUtils.
  */
 public interface TesterListener {
     /**
